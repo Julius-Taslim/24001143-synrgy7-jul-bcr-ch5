@@ -34,11 +34,6 @@ $ Get all order -> GET : http://localhost:8000/orders
 $ Create Order -> POST : http://localhost:8000/orders
 $ Delete Order -> DELETE : http://localhost:8000/orders/:id
 $ Get Order by Id -> GET : http://localhost:8000/orders/:id
-
-router.get('/', orderService.getOrders);
-router.get('/:id', orderService.getOrderById);
-router.post('/', orderService.createOrder);
-router.delete('/:id', orderService.deleteOrderById);
 ```
 
 # ERD
