@@ -1,4 +1,3 @@
-import axios from 'axios';
 import { createClient } from 'redis';
 import { Request, Response } from 'express';
 import knex from 'knex';
@@ -49,11 +48,10 @@ const getCars = async (req: Request, res: Response): Promise<void> => {
 const getCarById = async (req: Request, res: Response): Promise<void> => {
     const { id } = req.params;
 
-    if (!id) {
+    if (!id || Number.isNaN(id)) {
         res.status(400).send({ message: 'ID is required' });
         return;
     }
-
     try {
         const carDataById = await client.get(id)
         if (carDataById)
@@ -102,11 +100,11 @@ const addCar = async (req: Request, res: Response): Promise<void> => {
         const { name, price, start_rent, finish_rent } = req.body;
 
         const insertedCar = await CarsModel.query().insert({
-            name:name,
-            price:price,
-            image_url:image_url,
-            start_rent:start_rent,
-            finish_rent:finish_rent
+            name: name,
+            price: price,
+            image_url: image_url,
+            start_rent: start_rent,
+            finish_rent: finish_rent
         });
 
         res.status(201).send({ message: 'Car added successfully', data: insertedCar });
@@ -120,7 +118,7 @@ const addCar = async (req: Request, res: Response): Promise<void> => {
 const deleteCarById = async (req: Request, res: Response): Promise<void> => {
     const { id } = req.params;
 
-    if (!id) {
+    if (!id || Number.isNaN(id)) {
         res.status(400).send({ message: 'ID is required' });
         return;
     }
@@ -143,12 +141,20 @@ const deleteCarById = async (req: Request, res: Response): Promise<void> => {
 
 const updateCarById = async (req: Request, res: Response): Promise<void> => {
     const { id } = req.params;
-    const updates = req.body;
-
-    if (!id) {
-        res.status(400).send({ message: 'ID is required' });
-        return;
+    if (req.file) {
+        const fileBase64 = req.file.buffer.toString('base64');
+        const file = `data:${req.file.mimetype};base64,${fileBase64}`;
+        try {
+            const result: UploadApiResponse = await cloudinary.uploader.upload(file)
+            req.body.image_url = result.url;
+        } catch (err) {
+            console.error(err);
+            res.status(500).json({ message: 'Failed to upload to Cloudinary' });
+            return;
+        }
     }
+
+    const updates = req.body;
 
     if (!updates || Object.keys(updates).length === 0) {
         res.status(400).send({ message: 'No updates provided' });
